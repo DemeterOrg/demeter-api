@@ -7,10 +7,16 @@ requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.17.0",
     "asyncpg>=0.30.0",
+    "colorama>=0.4.6",
     "fastapi[standard,standart]>=0.119.0",
     "httpx>=0.28.1",
+    "passlib[argon2]>=1.7.4",
+    "pydantic-settings>=2.11.0",
     "python-dotenv>=1.1.1",
+    "python-jose[cryptography]>=3.3.0",
+    "python-json-logger>=4.0.0",
     "sqlalchemy>=2.0.44",
+    "structlog>=25.4.0",
     "uvicorn[standard]>=0.37.0",
 ]
 

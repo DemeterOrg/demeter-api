@@ -1,0 +1,19 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts must always use LF
+*.sh text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Config files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.env text eol=lf
+.env.* text eol=lf
+
+# Markdown
+*.md text eol=lf
