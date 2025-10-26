@@ -1,0 +1,119 @@
+# .pre-commit-config.yaml
+
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+repos:
+  # hooks comuns (trailing whitespace, etc)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-yaml
+      - id: sort-simple-yaml
+      - id: check-added-large-files
+
+  # Black 
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3.13
+        args:
+          - --config=pyproject.toml
+
+  # isort (ordenar imports)  
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.0
+    hooks:
+      - id: isort
+        language_version: python3.13
+        args:
+          - --profile
+          - black
+          - --filter-files
+
+  # flake8  
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        language_version: python3.13
+        args:
+          - --config=pyproject.toml
+
+  # mypy  
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.1.1
+    hooks:
+      - id: mypy
+        language_version: python3.13
+        additional_dependencies:
+          - types-requests
+        args:
+          - --config=pyproject.toml
+
+  # bandit (checagens de segurança simples)  
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.4
+    hooks:
+      - id: bandit
+        language_version: python3.13
+        args:
+          - -ll
+        files: \.py$
+
+  # docformatter (formatador de docstrings)  
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.8.0
+    hooks:
+      - id: docformatter
+        language_version: python3.13
+        additional_dependencies:
+          - tomli
+        args:
+          - --in-place
+          - --black
+
+  # numpydoc validation  
+  - repo: https://github.com/numpy/numpydoc
+    rev: v1.7.0
+    hooks:
+      - id: numpydoc-validation
+        language_version: python3.13
+
+  # shellcheck para scripts shell  
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+        language_version: python3.13
+
+  # markdownlint para arquivos Markdown  
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        language_version: python3.13
+        args:
+          - --fix
+
+  # commit prefix hook (para convenções de commit)  
+  - repo: https://github.com/JangasCodingplace/commit-prefix-pre-commit
+    rev: v0.0.2
+    hooks:
+      - id: commit-prefix
+        stages:
+          - commit-msg
+
+  # conventional commit hook  
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.3.0
+    hooks:
+      - id: conventional-pre-commit
+        stages:
+          - commit-msg
+        args: []

@@ -24,7 +24,9 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.claude
 MANIFEST
+docs
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -205,3 +207,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+#docs
+segurança.md
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
