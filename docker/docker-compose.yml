@@ -1,14 +1,10 @@
-# ============================================
-# DEMETER API - Docker Compose
-# ============================================
-
 services:
   db:
     image: postgres:16-alpine
     container_name: demeter-db
     restart: unless-stopped
     env_file:
-      - ../.env                 # ⬅️ .env está na raiz do projeto
+      - ../.env
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
