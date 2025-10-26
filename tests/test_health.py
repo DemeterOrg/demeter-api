@@ -173,7 +173,7 @@ async def test_health_uploads_check(client: AsyncClient):
         ), "writable deve ser boolean"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_health_endpoint_performance(client: AsyncClient):
     """
