@@ -21,6 +21,9 @@ done
 echo "Aplicando migrations..."
 alembic upgrade head
 
+echo "Populando roles e permissions (se necessário)..."
+python -m src.cli.seed_roles || true
+
 echo "Criando usuário admin (se necessário)..."
 python -m src.cli.create_admin \
     --email "${ADMIN_EMAIL:-admin@demeter.local}" \
