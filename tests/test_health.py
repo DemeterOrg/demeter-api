@@ -38,13 +38,11 @@ async def test_health_endpoint_structure(client: AsyncClient):
     response = await client.get("/health")
     data = response.json()
 
-    # Verificar campos principais
     assert "status" in data, "Resposta deve conter 'status'"
     assert "version" in data, "Resposta deve conter 'version'"
     assert "environment" in data, "Resposta deve conter 'environment'"
     assert "checks" in data, "Resposta deve conter 'checks'"
 
-    # Verificar tipo dos campos
     assert isinstance(data["status"], str), "status deve ser string"
     assert isinstance(data["version"], str), "version deve ser string"
     assert isinstance(data["environment"], str), "environment deve ser string"
@@ -80,20 +78,16 @@ async def test_health_database_check(client: AsyncClient):
     response = await client.get("/health")
     data = response.json()
 
-    # Verificar se database check existe
     assert "database" in data["checks"], "Checks deve conter 'database'"
 
     db_check = data["checks"]["database"]
 
-    # Verificar estrutura do database check
     assert "status" in db_check, "Database check deve conter 'status'"
 
-    # Em ambiente de teste, DB deve estar saudável
     assert (
         db_check["status"] == "healthy"
     ), f"Database deve estar healthy em testes, status: {db_check['status']}"
 
-    # Se healthy, deve ter latency
     if db_check["status"] == "healthy":
         assert "latency_ms" in db_check, "Database check deve conter 'latency_ms'"
         assert isinstance(
@@ -113,20 +107,16 @@ async def test_health_disk_check(client: AsyncClient):
     response = await client.get("/health")
     data = response.json()
 
-    # Verificar se disk check existe
     assert "disk" in data["checks"], "Checks deve conter 'disk'"
 
     disk_check = data["checks"]["disk"]
 
-    # Verificar estrutura do disk check
     assert "status" in disk_check, "Disk check deve conter 'status'"
 
-    # Se não houver erro, deve ter informações de espaço
     if "error" not in disk_check:
         assert "free_gb" in disk_check, "Disk check deve conter 'free_gb'"
         assert "total_gb" in disk_check, "Disk check deve conter 'total_gb'"
 
-        # Validar tipos
         assert isinstance(
             disk_check["free_gb"], (int, float)
         ), "free_gb deve ser número"
@@ -134,7 +124,6 @@ async def test_health_disk_check(client: AsyncClient):
             disk_check["total_gb"], (int, float)
         ), "total_gb deve ser número"
 
-        # Validar valores lógicos
         assert disk_check["free_gb"] >= 0, "free_gb deve ser positivo"
         assert disk_check["total_gb"] > 0, "total_gb deve ser positivo"
         assert (
@@ -153,20 +142,16 @@ async def test_health_uploads_check(client: AsyncClient):
     response = await client.get("/health")
     data = response.json()
 
-    # Verificar se uploads check existe
     assert "uploads" in data["checks"], "Checks deve conter 'uploads'"
 
     uploads_check = data["checks"]["uploads"]
 
-    # Verificar estrutura do uploads check
     assert "status" in uploads_check, "Uploads check deve conter 'status'"
 
-    # Se não houver erro, deve ter path e writable
     if "error" not in uploads_check:
         assert "path" in uploads_check, "Uploads check deve conter 'path'"
         assert "writable" in uploads_check, "Uploads check deve conter 'writable'"
 
-        # Validar tipos
         assert isinstance(uploads_check["path"], str), "path deve ser string"
         assert isinstance(
             uploads_check["writable"], bool
@@ -203,13 +188,11 @@ async def test_health_overall_status_logic(client: AsyncClient):
     response = await client.get("/health")
     data = response.json()
 
-    # Se database está unhealthy, status geral deve ser unhealthy
     if data["checks"]["database"]["status"] == "unhealthy":
         assert (
             data["status"] == "unhealthy"
         ), "Status geral deve ser unhealthy se database unhealthy"
 
-    # Se database está healthy mas disk degraded, status pode ser degraded
     if (
         data["checks"]["database"]["status"] == "healthy"
         and data["checks"]["disk"]["status"] == "degraded"

@@ -201,7 +201,7 @@ class Settings(BaseSettings):
 
     UPLOAD_DIR: str = Field(
         default="uploads",
-        description="Diret�rio tempor�rio para uploads"
+        description="Diretório temporário para uploads"
     )
 
     USE_S3: bool = Field(

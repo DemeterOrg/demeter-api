@@ -20,18 +20,6 @@ def create_access_token(
 ) -> str:
     """
     Cria um access token JWT.
-
-    Args:
-        subject: Identificador do usuário (user_id)
-        additional_claims: Claims adicionais opcionais
-
-    Returns:
-        Token JWT assinado
-
-    Example:
-        >>> token = create_access_token(subject=123)
-        >>> print(token)
-        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     """
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -59,19 +47,6 @@ def create_access_token(
 def create_refresh_token(subject: str | int) -> str:
     """
     Cria um refresh token JWT.
-
-    Refresh tokens têm validade maior e são usados para obter novos access tokens.
-
-    Args:
-        subject: Identificador do usuário (user_id)
-
-    Returns:
-        Refresh token JWT assinado
-
-    Example:
-        >>> token = create_refresh_token(subject=123)
-        >>> print(token)
-        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     """
     expire = datetime.now(timezone.utc) + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
@@ -96,23 +71,6 @@ def create_refresh_token(subject: str | int) -> str:
 def decode_token(token: str) -> Dict[str, Any]:
     """
     Decodifica um token JWT sem validar expiração.
-
-    Útil para inspecionar o conteúdo do token.
-
-    Args:
-        token: Token JWT a ser decodificado
-
-    Returns:
-        Dicionário com os claims do token
-
-    Raises:
-        JWTError: Se o token for inválido ou malformado
-
-    Example:
-        >>> token = create_access_token(subject=123)
-        >>> payload = decode_token(token)
-        >>> print(payload["sub"])
-        123
     """
     try:
         payload = jwt.decode(
@@ -129,29 +87,6 @@ def decode_token(token: str) -> Dict[str, Any]:
 def verify_token(token: str, token_type: str = "access") -> Dict[str, Any]:
     """
     Verifica e decodifica um token JWT com validação completa.
-
-    Valida:
-    - Assinatura do token
-    - Expiração
-    - Tipo do token (access ou refresh)
-
-    Args:
-        token: Token JWT a ser verificado
-        token_type: Tipo esperado do token ("access" ou "refresh")
-
-    Returns:
-        Dicionário com os claims do token
-
-    Raises:
-        ExpiredSignatureError: Se o token estiver expirado
-        JWTError: Se o token for inválido
-        ValueError: Se o tipo do token não corresponder
-
-    Example:
-        >>> token = create_access_token(subject=123)
-        >>> payload = verify_token(token, token_type="access")
-        >>> print(payload["sub"])
-        123
     """
     try:
         payload = jwt.decode(
@@ -160,7 +95,6 @@ def verify_token(token: str, token_type: str = "access") -> Dict[str, Any]:
             algorithms=[settings.ALGORITHM],
         )
 
-        # Verificar tipo do token
         if payload.get("type") != token_type:
             raise ValueError(
                 f"Tipo de token inválido. Esperado: {token_type}, "
@@ -178,18 +112,6 @@ def verify_token(token: str, token_type: str = "access") -> Dict[str, Any]:
 def get_token_expiration(token: str) -> Optional[datetime]:
     """
     Retorna a data de expiração de um token.
-
-    Args:
-        token: Token JWT
-
-    Returns:
-        Data de expiração do token (timezone-aware) ou None se não houver
-
-    Example:
-        >>> token = create_access_token(subject=123)
-        >>> expiration = get_token_expiration(token)
-        >>> print(expiration)
-        2025-10-23 15:30:00+00:00
     """
     try:
         payload = decode_token(token)
@@ -206,17 +128,6 @@ def get_token_expiration(token: str) -> Optional[datetime]:
 def is_token_expired(token: str) -> bool:
     """
     Verifica se um token está expirado.
-
-    Args:
-        token: Token JWT
-
-    Returns:
-        True se expirado, False caso contrário
-
-    Example:
-        >>> token = create_access_token(subject=123)
-        >>> is_token_expired(token)
-        False
     """
     expiration = get_token_expiration(token)
 
@@ -229,18 +140,6 @@ def is_token_expired(token: str) -> bool:
 def extract_user_id_from_token(token: str) -> Optional[int]:
     """
     Extrai o user_id de um token JWT.
-
-    Args:
-        token: Token JWT
-
-    Returns:
-        ID do usuário ou None se não encontrado
-
-    Example:
-        >>> token = create_access_token(subject=123)
-        >>> user_id = extract_user_id_from_token(token)
-        >>> print(user_id)
-        123
     """
     try:
         payload = decode_token(token)
@@ -248,5 +147,3 @@ def extract_user_id_from_token(token: str) -> Optional[int]:
         return int(user_id) if user_id else None
     except (JWTError, ValueError, TypeError):
         return None
-
-

@@ -61,7 +61,6 @@ class UserEntity:
         if not self.phone:
             raise ValueError("Telefone é obrigatório")
 
-        # Remove caracteres não numéricos para validação
         phone_digits = re.sub(r'\D', '', self.phone)
 
         if len(phone_digits) < 10 or len(phone_digits) > 11:

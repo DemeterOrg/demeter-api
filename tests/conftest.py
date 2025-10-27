@@ -1,8 +1,5 @@
 """
 Configuração global para testes pytest.
-
-Este arquivo é carregado automaticamente pelo pytest e define
-fixtures e configurações compartilhadas entre todos os testes.
 """
 
 import asyncio
@@ -18,23 +15,13 @@ from src.config.db.database import Base
 from src.config.db.dependencies import get_db
 from src.main import app
 
-# ==============================================================================
-# Configuração de Ambiente para Testes
-# ==============================================================================
 
-# Forçar ambiente de teste
 os.environ["ENVIRONMENT"] = "test"
 
-# URL do banco de testes (pode ser sobrescrito por variável de ambiente)
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
     "postgresql+asyncpg://demeter:demeter_dev@localhost:5432/demeter_test_db",
 )
-
-
-# ==============================================================================
-# Event Loop Fixture (para testes assíncronos)
-# ==============================================================================
 
 
 @pytest.fixture(scope="function")
@@ -43,11 +30,6 @@ def event_loop():
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
-
-
-# ==============================================================================
-# Database Fixtures
-# ==============================================================================
 
 
 @pytest.fixture(scope="function")
@@ -126,25 +108,17 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     Sobrescreve a dependência get_db para usar a sessão de teste.
     """
 
-    # Sobrescrever dependência de DB
     async def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
 
-    # Criar cliente
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 
-    # Limpar overrides
     app.dependency_overrides.clear()
-
-
-# ==============================================================================
-# Helper Fixtures
-# ==============================================================================
 
 
 @pytest.fixture
