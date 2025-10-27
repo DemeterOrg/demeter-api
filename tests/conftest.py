@@ -14,7 +14,8 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.config.db.database import Base, get_db
+from src.config.db.database import Base
+from src.config.db.dependencies import get_db
 from src.main import app
 
 # ==============================================================================
@@ -27,7 +28,7 @@ os.environ["ENVIRONMENT"] = "test"
 # URL do banco de testes (pode ser sobrescrito por variável de ambiente)
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://demeter:demeter_dev_password@localhost:5432/demeter_test_db",
+    "postgresql+asyncpg://demeter:demeter_dev@localhost:5432/demeter_test_db",
 )
 
 
@@ -36,13 +37,10 @@ TEST_DATABASE_URL = os.getenv(
 # ==============================================================================
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """
-    Cria event loop para toda sessão de testes.
-    Necessário para testes assíncronos funcionarem corretamente.
-    """
-    loop = asyncio.get_event_loop_policy().new_event_loop()
+@pytest.fixture(scope="function")
+def event_loop():
+    """Cria event loop para cada teste."""
+    loop = asyncio.new_event_loop()
     yield loop
     loop.close()
 
@@ -52,25 +50,21 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 # ==============================================================================
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def test_engine():
-    """
-    Cria engine de banco de dados para testes.
-    Scope: session (criado uma vez para todos os testes).
-    """
+    """Cria engine de banco de dados para testes."""
     engine = create_async_engine(
         TEST_DATABASE_URL,
-        echo=False,  # Não mostrar SQL logs em testes
+        echo=False,
         pool_pre_ping=True,
+        poolclass=None,
     )
 
-    # Criar todas as tabelas
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
-    # Cleanup: dropar todas as tabelas após os testes
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
@@ -81,14 +75,11 @@ async def test_engine():
 async def db_session(
     test_engine,
 ) -> AsyncGenerator[AsyncSession, None]:
-    """
-    Cria sessão de banco de dados para cada teste.
-    Scope: function (nova sessão para cada teste).
+    """Cria sessão de banco de dados para cada teste."""
+    from src.infrastructure.models.role import Role
+    from src.infrastructure.models.permission import Permission
+    from src.infrastructure.models.role_permission import RolePermission
 
-    Usa transação que é revertida ao final do teste,
-    mantendo o banco limpo entre testes.
-    """
-    # Criar sessão
     async_session = sessionmaker(
         test_engine,
         class_=AsyncSession,
@@ -96,11 +87,34 @@ async def db_session(
     )
 
     async with async_session() as session:
-        # Iniciar transação
         async with session.begin():
-            yield session
-            # Rollback automático ao final do teste
-            await session.rollback()
+            classificador_role = Role(name="classificador", description="Usuário classificador", is_system=True)
+            admin_role = Role(name="admin", description="Administrador", is_system=True)
+
+            session.add_all([classificador_role, admin_role])
+            await session.flush()
+
+            perms = [
+                Permission(name="classifications:create:own", resource="classifications", action="create", scope="own"),
+                Permission(name="classifications:read:own", resource="classifications", action="read", scope="own"),
+                Permission(name="classifications:update:own", resource="classifications", action="update", scope="own"),
+                Permission(name="classifications:delete:own", resource="classifications", action="delete", scope="own"),
+                Permission(name="classifications:read:all", resource="classifications", action="read", scope="all"),
+                Permission(name="classifications:delete:all", resource="classifications", action="delete", scope="all"),
+            ]
+            session.add_all(perms)
+            await session.flush()
+
+            for perm in perms[:4]:
+                session.add(RolePermission(role_id=classificador_role.id, permission_id=perm.id))
+
+            for perm in perms:
+                session.add(RolePermission(role_id=admin_role.id, permission_id=perm.id))
+
+            await session.commit()
+
+        yield session
+        await session.rollback()
 
 
 @pytest.fixture(scope="function")

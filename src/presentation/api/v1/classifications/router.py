@@ -30,9 +30,9 @@ router = APIRouter()
 )
 async def create_classification(
     image: Annotated[UploadFile, File(description="Imagem do grão")],
-    notes: Annotated[str | None, Form()] = None,
     current_user: Annotated[dict, Depends(require_permission("classifications:create:own"))],
-    db: DbSessionDep = None
+    db: DbSessionDep,
+    notes: Annotated[str | None, Form()] = None
 ):
     """Upload de imagem e classificação automática (mock)."""
     repo = ClassificationRepositoryImpl(db)

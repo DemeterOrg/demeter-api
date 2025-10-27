@@ -18,17 +18,18 @@ from alembic import context
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-# Import Base and models directly (bypass __init__ files with encoding issues)
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import MetaData
+# Import Base from the project
+from src.config.db.database import Base
 
-# We'll define Base here temporarily
-Base = declarative_base()
-metadata = MetaData()
-
-# Import all models
+# Import all models so Alembic can detect them
 from src.infrastructure.models.user import User
 from src.infrastructure.models.refresh_token import RefreshToken
+from src.infrastructure.models.role import Role
+from src.infrastructure.models.permission import Permission
+from src.infrastructure.models.role_permission import RolePermission
+from src.infrastructure.models.user_role import UserRole
+from src.infrastructure.models.audit_log import AuditLog
+from src.infrastructure.models.classification import Classification
 
 # Get database URL from environment
 from dotenv import load_dotenv

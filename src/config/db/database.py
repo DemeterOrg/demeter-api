@@ -86,3 +86,4 @@ class DatabaseEngine:
         await self._engine.dispose()
 
 database = DatabaseEngine()
+async_session_maker = database.session_factory
