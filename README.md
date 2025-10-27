@@ -2,6 +2,10 @@
 
    API para classificação de grãos utilizando Machine Learning e visão computacional.
 
+   ### Mebros da Equipe:
+   - Emanuel Mascarenhas Rodrigues
+   - Luis Eduardo Rodrigues Miranda
+   - Vinicius Abreu Silva Franco
 
 
    ## Documentação no POSTMAN
@@ -38,7 +42,7 @@
    - ✅ Roles e permissions configuradas
    - ✅ Usuário admin criado automaticamente
 
-   ### Credenciais Padrão
+   ### Credenciais Padrão - Crendenciais disponibilizadas somente para fins de teste local.
 
    ```
    Email: admin@demeter.local
