@@ -1,9 +1,5 @@
 """
 Módulo de segurança da aplicação.
-
-Este módulo contém implementações relacionadas a:
-- Autenticação (JWT)
-- Hashing e verificação de senhas (Argon2id)
 """
 
 from src.config.security.auth import (

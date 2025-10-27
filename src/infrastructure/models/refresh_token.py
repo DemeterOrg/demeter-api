@@ -1,8 +1,5 @@
 """
 Modelo SQLAlchemy para a tabela de Refresh Tokens.
-
-Este modelo armazena os tokens de renovação para permitir
-renovação segura de access tokens sem necessidade de nova autenticação.
 """
 
 from datetime import datetime, timezone
@@ -20,22 +17,6 @@ if TYPE_CHECKING:
 class RefreshToken(Base):
     """
     Modelo para a tabela 'refresh_tokens'.
-
-    Armazena os tokens de renovação (refresh tokens) emitidos para usuários.
-    Estes tokens têm validade maior que access tokens e permitem obter
-    novos access tokens sem necessidade de login.
-
-    Attributes:
-        id: Identificador único do token
-        token: Hash do refresh token
-        user_id: ID do usuário proprietário (foreign key)
-        expires_at: Data de expiração do token
-        created_at: Data de criação do token
-        revoked_at: Data de revogação (se revogado)
-        is_revoked: Se o token foi revogado
-        user_agent: User agent do cliente que criou o token
-        ip_address: Endereço IP do cliente
-        user: Relacionamento com o usuário
     """
 
     __tablename__ = "refresh_tokens"

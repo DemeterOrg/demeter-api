@@ -1,8 +1,5 @@
 """
 Entry point da aplicação DEMETER API.
-
-Esta é a aplicação principal FastAPI que configura todos os routers,
-middleware, exception handlers e inicializações necessárias.
 """
 
 from contextlib import asynccontextmanager
@@ -25,26 +22,19 @@ async def lifespan(app: FastAPI):
 
     Executa código de inicialização e finalização.
     """
-    # Startup
     logger.info(
         "Starting DEMETER API",
         version=settings.VERSION,
         environment=settings.ENVIRONMENT,
     )
 
-    # Aqui você pode adicionar inicializações necessárias
-    # Por exemplo: criar tabelas, executar migrations, etc.
-
     yield
 
-    # Shutdown
     logger.info("Shutting down DEMETER API")
 
-    # Fechar conexões
     await database.close()
 
 
-# Criar aplicação FastAPI
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description=settings.DESCRIPTION,
@@ -55,7 +45,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -64,10 +53,8 @@ app.add_middleware(
     allow_headers=settings.ALLOWED_HEADERS,
 )
 
-# Registrar exception handlers
 register_exception_handlers(app)
 
-# Incluir routers
 app.include_router(health_router)
 app.include_router(v1_router)
 

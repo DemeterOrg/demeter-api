@@ -1,9 +1,5 @@
 """
 Handlers globais de exceções para o FastAPI.
-
-Este módulo define handlers customizados para capturar e tratar exceções
-de forma consistente em toda a aplicação, retornando respostas HTTP
-padronizadas e logando erros apropriadamente.
 """
 
 from typing import Union
@@ -26,13 +22,6 @@ async def demeter_exception_handler(
 ) -> JSONResponse:
     """
     Handler para exceções personalizadas da aplicação (DemeterException).
-
-    Args:
-        request: Request do FastAPI
-        exc: Exceção DemeterException levantada
-
-    Returns:
-        JSONResponse com detalhes do erro
     """
     logger.warning(
         "Application exception",
@@ -60,13 +49,6 @@ async def validation_exception_handler(
 ) -> JSONResponse:
     """
     Handler para erros de validação do Pydantic.
-
-    Args:
-        request: Request do FastAPI
-        exc: Exceção de validação do Pydantic
-
-    Returns:
-        JSONResponse com detalhes dos erros de validação
     """
     errors = []
     for error in exc.errors():
@@ -100,13 +82,6 @@ async def jwt_exception_handler(
 ) -> JSONResponse:
     """
     Handler para erros de JWT.
-
-    Args:
-        request: Request do FastAPI
-        exc: Exceção JWT
-
-    Returns:
-        JSONResponse com mensagem de erro de autenticação
     """
     logger.warning(
         "JWT error",
@@ -138,13 +113,6 @@ async def database_exception_handler(
 ) -> JSONResponse:
     """
     Handler para erros do SQLAlchemy.
-
-    Args:
-        request: Request do FastAPI
-        exc: Exceção do SQLAlchemy
-
-    Returns:
-        JSONResponse com mensagem de erro de banco de dados
     """
     logger.error(
         "Database error",
@@ -170,13 +138,6 @@ async def generic_exception_handler(
 ) -> JSONResponse:
     """
     Handler genérico para exceções não tratadas.
-
-    Args:
-        request: Request do FastAPI
-        exc: Exceção não tratada
-
-    Returns:
-        JSONResponse com mensagem genérica de erro interno
     """
     logger.error(
         "Unhandled exception",
@@ -200,36 +161,16 @@ async def generic_exception_handler(
 def register_exception_handlers(app: FastAPI) -> None:
     """
     Registra todos os handlers de exceção na aplicação FastAPI.
-
-    Este método deve ser chamado durante a inicialização da aplicação
-    para configurar o tratamento global de exceções.
-
-    Args:
-        app: Instância do FastAPI
-
-    Example:
-        ```python
-        from fastapi import FastAPI
-        from src.config.exceptions.handlers import register_exception_handlers
-
-        app = FastAPI()
-        register_exception_handlers(app)
-        ```
     """
-    # Exceções customizadas da aplicação
     app.add_exception_handler(DemeterException, demeter_exception_handler)
 
-    # Exceções de validação do Pydantic
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-    # Exceções de JWT
     app.add_exception_handler(JWTError, jwt_exception_handler)
     app.add_exception_handler(ExpiredSignatureError, jwt_exception_handler)
 
-    # Exceções de banco de dados
     app.add_exception_handler(SQLAlchemyError, database_exception_handler)
 
-    # Exceção genérica para erros não tratados
     app.add_exception_handler(Exception, generic_exception_handler)
 
     logger.info("Exception handlers registered successfully")

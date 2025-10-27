@@ -17,7 +17,6 @@ async def seed_roles_and_permissions():
     """Popula roles e permissions iniciais no banco."""
     async with async_session_maker() as db:
         try:
-            # Verificar se já existem roles
             from sqlalchemy import select
             result = await db.execute(select(Role))
             existing_roles = result.scalars().all()
@@ -27,8 +26,7 @@ async def seed_roles_and_permissions():
                 logger.info("Seed skipped: roles already exist")
                 return
 
-            # Criar roles
-            print("📝 Criando roles...")
+            print("Criando roles...")
             classificador_role = Role(
                 name="classificador",
                 description="Usuário classificador",
@@ -46,8 +44,7 @@ async def seed_roles_and_permissions():
             print(f"   ✓ Role 'classificador' criada (ID: {classificador_role.id})")
             print(f"   ✓ Role 'admin' criada (ID: {admin_role.id})")
 
-            # Criar permissions
-            print("\n📝 Criando permissions...")
+            print("\nCriando permissions...")
             permissions = [
                 Permission(
                     name="classifications:create:own",
@@ -99,10 +96,8 @@ async def seed_roles_and_permissions():
             for perm in permissions:
                 print(f"   ✓ Permission '{perm.name}' criada (ID: {perm.id})")
 
-            # Associar permissions às roles
             print("\n📝 Associando permissions às roles...")
 
-            # Classificador: apenas permissões :own
             for perm in permissions[:4]:
                 role_perm = RolePermission(
                     role_id=classificador_role.id,
@@ -111,7 +106,6 @@ async def seed_roles_and_permissions():
                 db.add(role_perm)
             print(f"   ✓ 4 permissions associadas à role 'classificador'")
 
-            # Admin: todas as permissões
             for perm in permissions:
                 role_perm = RolePermission(
                     role_id=admin_role.id,

@@ -84,8 +84,6 @@ async def login(
     """
     user_repo = UserRepositoryImpl(db)
     refresh_token_repo = RefreshTokenRepositoryImpl(db)
-
-    # Extrair informações do request
     user_agent = request.headers.get("user-agent")
     ip_address = request.client.host if request.client else None
 
