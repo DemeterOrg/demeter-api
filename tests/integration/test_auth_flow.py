@@ -122,10 +122,14 @@ async def test_logout_revokes_token(client: AsyncClient):
         "/api/v1/auth/login",
         json={"email": "logoutuser@example.com", "password": "Logout123!@#"},
     )
-    refresh_token = login_response.json()["tokens"]["refresh_token"]
+    tokens = login_response.json()["tokens"]
+    access_token = tokens["access_token"]
+    refresh_token = tokens["refresh_token"]
 
     response = await client.post(
-        "/api/v1/auth/logout", json={"refresh_token": refresh_token}
+        "/api/v1/auth/logout",
+        json={"refresh_token": refresh_token},
+        headers={"Authorization": f"Bearer {access_token}"},
     )
 
     assert response.status_code == 200

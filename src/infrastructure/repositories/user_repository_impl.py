@@ -13,6 +13,10 @@ from sqlalchemy.orm import selectinload
 from src.domain.repositories.user_repository import UserRepository
 from src.domain.entities.user import UserEntity
 from src.infrastructure.models.user import User
+from src.infrastructure.models.user_role import UserRole
+from src.infrastructure.models.role import Role
+from src.infrastructure.models.role_permission import RolePermission
+from src.infrastructure.models.permission import Permission
 from src.config.exceptions.custom_exceptions import (
     ConflictError,
     NotFoundError,
@@ -52,7 +56,6 @@ class UserRepositoryImpl(UserRepository):
     async def create(self, user: UserEntity) -> UserEntity:
         """Cria um novo usuário."""
         try:
-            # Criar modelo
             model = User(
                 email=user.email,
                 name=user.name,
@@ -145,7 +148,6 @@ class UserRepositoryImpl(UserRepository):
             if not model:
                 raise NotFoundError(f"Usuário com ID {user.id} não encontrado")
 
-            # Atualizar campos
             model.name = user.name
             model.email = user.email
             model.phone = user.phone
@@ -308,7 +310,7 @@ class UserRepositoryImpl(UserRepository):
                 select(User)
                 .where(User.id == user_id)
                 .options(
-                    selectinload(User.user_roles).selectinload("role").selectinload("role_permissions").selectinload("permission")
+                    selectinload(User.user_roles).selectinload(UserRole.role).selectinload(Role.role_permissions).selectinload(RolePermission.permission)
                 )
             )
 
@@ -329,7 +331,7 @@ class UserRepositoryImpl(UserRepository):
                 select(User)
                 .where(User.email == email)
                 .options(
-                    selectinload(User.user_roles).selectinload("role").selectinload("role_permissions").selectinload("permission")
+                    selectinload(User.user_roles).selectinload(UserRole.role).selectinload(Role.role_permissions).selectinload(RolePermission.permission)
                 )
             )
 
