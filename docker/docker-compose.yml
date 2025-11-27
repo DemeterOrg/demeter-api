@@ -21,7 +21,7 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
-    container_name: demeter-api
+    container_name: api
     restart: unless-stopped
     env_file:
       - ../.env
