@@ -148,7 +148,7 @@ celerybeat.pid
 
 # mkdocs documentation
 /site
-
+.env
 # mypy
 .mypy_cache/
 .dmypy.json
