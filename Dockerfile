@@ -23,8 +23,8 @@ COPY src /app/src
 COPY alembic /app/alembic
 COPY alembic.ini /app/
 
-COPY docker/scripts/entrypoint.sh /app/
-COPY docker/scripts/healthcheck.sh /app/
+COPY scripts/entrypoint.sh /app/
+COPY scripts/healthcheck.sh /app/
 RUN chmod +x /app/entrypoint.sh /app/healthcheck.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

@@ -19,10 +19,10 @@ services:
   api:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./Dockerfile
     restart: unless-stopped
     env_file:
-      - ../.env
+      - .env
     volumes:
       - uploads:/app/uploads
     depends_on:
