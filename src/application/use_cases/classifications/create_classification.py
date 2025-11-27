@@ -5,8 +5,10 @@ from fastapi import UploadFile
 from src.infrastructure.repositories.classification_repository_impl import ClassificationRepositoryImpl
 from src.infrastructure.services.storage_service import StorageService
 from src.infrastructure.services.mock_classifier_service import MockClassifierService
+from src.infrastructure.services.demeter_ml_service import DemeterMLService
 from src.application.schemas.classification import ClassificationResponse
 from src.config.logging.logger import get_logger
+from src.config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -17,7 +19,13 @@ class CreateClassificationUseCase:
     def __init__(self, classification_repo: ClassificationRepositoryImpl):
         self.classification_repo = classification_repo
         self.storage = StorageService()
-        self.classifier = MockClassifierService()
+
+        if settings.USE_REAL_ML_API:
+            self.classifier = DemeterMLService()
+            logger.info("Using DemeterMLService (real AI)")
+        else:
+            self.classifier = MockClassifierService()
+            logger.info("Using MockClassifierService (simulated)")
 
     async def execute(
         self,
@@ -28,7 +36,7 @@ class CreateClassificationUseCase:
         """Processa upload, classifica e salva."""
         image_path = await self.storage.save_image(user_id, image)
 
-        result = self.classifier.classify(image_path)
+        result = await self.classifier.classify(image_path)
 
         if notes:
             result["extra_data"]["notes"] = notes
@@ -37,7 +45,7 @@ class CreateClassificationUseCase:
             user_id=user_id,
             image_path=image_path,
             grain_type=result["grain_type"],
-            confidence_score=float(result["confidence_score"]),
+            confidence_score=float(result["confidence_score"]) if result["confidence_score"] else None,
             extra_data=result["extra_data"]
         )
 
@@ -45,7 +53,8 @@ class CreateClassificationUseCase:
             "Classification created",
             classification_id=classification.id,
             user_id=user_id,
-            grain_type=classification.grain_type
+            grain_type=classification.grain_type,
+            is_real_ml=result["extra_data"].get("mock") == False
         )
 
         return ClassificationResponse.model_validate(classification)

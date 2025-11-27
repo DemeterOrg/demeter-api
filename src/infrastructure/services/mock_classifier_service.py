@@ -18,7 +18,7 @@ class MockClassifierService:
         "Sorgo",
     ]
 
-    def classify(self, image_path: str) -> dict:
+    async def classify(self, image_path: str) -> dict:
         """Retorna classificação mockada."""
         grain_type = random.choice(self.GRAIN_TYPES)
         confidence = round(random.uniform(0.70, 0.95), 4)

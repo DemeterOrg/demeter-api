@@ -229,6 +229,28 @@ class Settings(BaseSettings):
         description="Nome do bucket S3"
     )
 
+    USE_REAL_ML_API: bool = Field(
+        default=False,
+        description="Usar API de ML real ao invés de mock"
+    )
+
+    DEMETER_ML_API_URL: str = Field(
+        default="https://3kgtn4mls7.execute-api.us-east-2.amazonaws.com/upload",
+        description="URL da API de ML para classificação de grãos"
+    )
+
+    DEMETER_ML_TIMEOUT: float = Field(
+        default=30.0,
+        ge=10.0,
+        le=120.0,
+        description="Timeout para chamadas à API de ML em segundos"
+    )
+
+    ENABLE_ML_FALLBACK_TO_MOCK: bool = Field(
+        default=True,
+        description="Habilitar fallback para mock em caso de erro da API de ML"
+    )
+
     @property
     def is_development(self) -> bool:
         """Verifica se está em ambiente de desenvolvimento"""
