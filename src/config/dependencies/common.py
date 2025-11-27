@@ -10,8 +10,7 @@ from jose.exceptions import ExpiredSignatureError, JWTError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.security.auth import verify_token, extract_user_id_from_token
-from src.config.exceptions.custom_exceptions import AuthenticationError, TokenError
+from src.config.security.auth import verify_token
 from src.config.db.dependencies import get_db
 
 security = HTTPBearer()
