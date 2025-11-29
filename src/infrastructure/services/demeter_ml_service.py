@@ -92,16 +92,35 @@ class DemeterMLService:
     def _map_response(self, api_response: dict) -> dict:
         """Mapeia resposta da API para formato interno."""
         try:
-            report = api_response["report"]
+            report = api_response.get("report")
 
+            # Validar se report existe
+            if not report:
+                logger.error("ML API response missing report field", response=api_response)
+                raise ExternalServiceError("Resposta inválida do serviço de IA")
+
+            # Verificar se há erro explícito (grãos não detectados)
             if "error" in report:
                 raise ValidationError(
                     "Não foi possível detectar grãos na imagem. "
-                    "Tire uma foto mais próxima dos grãos."
+                    "Tire uma foto mais próxima dos grãos com boa iluminação."
                 )
 
-            total_grains = report["total_grains"]
-            defects = report["defects"]
+            # Tratamento defensivo: validar se total_grains existe
+            total_grains = report.get("total_grains")
+
+            # Se total_grains não existe ou é None/0, considerar como "nenhum grão detectado"
+            if total_grains is None or total_grains == 0:
+                raise ValidationError(
+                    "Não foi possível detectar grãos na imagem. "
+                    "Tire uma foto mais próxima dos grãos com boa iluminação."
+                )
+
+            # Validar defects (tratamento defensivo)
+            defects = report.get("defects", {})
+            if not isinstance(defects, dict):
+                defects = {}
+
             broken = defects.get("broken", 0)
             fermented = defects.get("fermented", 0)
             total_defects = broken + fermented
@@ -109,12 +128,15 @@ class DemeterMLService:
             defect_percentage = (total_defects / total_grains * 100) if total_grains > 0 else 0
             confidence = max(0.0, 1.0 - (defect_percentage / 100))
 
+            # Validar llm_summary
+            llm_summary = report.get("llm_summary", "")
+
             return {
                 "grain_type": "Soja",
                 "confidence_score": Decimal(str(round(confidence, 4))),
                 "extra_data": {
                     "mock": False,
-                    "job_id": api_response["job_id"],
+                    "job_id": api_response.get("job_id", ""),
                     "total_grains": total_grains,
                     "defects": {
                         "broken": broken,
@@ -122,17 +144,21 @@ class DemeterMLService:
                         "total": total_defects,
                         "percentage": round(defect_percentage, 2)
                     },
-                    "llm_summary": report["llm_summary"],
+                    "llm_summary": llm_summary,
                     "processed_image_available": True,
                     "analysis": {
                         "grain_count": total_grains,
-                        "quality": self._extract_quality(report["llm_summary"])
+                        "quality": self._extract_quality(llm_summary)
                     }
                 }
             }
 
-        except (KeyError, ValueError, ZeroDivisionError) as e:
-            logger.error("Failed to map ML API response", error=str(e), response=api_response)
+        except ValidationError:
+            # Re-lançar ValidationError para que seja tratado como 400 Bad Request
+            raise
+
+        except (KeyError, ValueError, TypeError, ZeroDivisionError) as e:
+            logger.error("Failed to map ML API response", error=str(e), response=api_response, exc_info=True)
             raise ExternalServiceError("Resposta inválida do serviço de IA")
 
     def _extract_quality(self, llm_summary: str) -> str:

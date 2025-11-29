@@ -194,6 +194,7 @@ async def test_classify_api_500_internal_error(ml_service):
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_classify_malformed_response_missing_fields(ml_service):
+    """Quando report está vazio, total_grains será None e deve lançar ValidationError."""
     ml_service.enable_fallback = False
 
     malformed_response = {
@@ -203,6 +204,65 @@ async def test_classify_malformed_response_missing_fields(ml_service):
 
     with patch("builtins.open", mock_open(read_data=b"fake")):
         with patch.object(ml_service, "_call_api", return_value=malformed_response):
+            with pytest.raises(ValidationError, match="Não foi possível detectar grãos"):
+                await ml_service.classify("/test.jpg")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_classify_missing_total_grains_field(ml_service):
+    """Quando total_grains não existe na resposta, deve lançar ValidationError."""
+    ml_service.enable_fallback = False
+
+    response_no_total_grains = {
+        "job_id": "test-id",
+        "report": {
+            "llm_summary": "Análise incompleta"
+        },
+        "processed_image_base64": "abc"
+    }
+
+    with patch("builtins.open", mock_open(read_data=b"fake")):
+        with patch.object(ml_service, "_call_api", return_value=response_no_total_grains):
+            with pytest.raises(ValidationError, match="Não foi possível detectar grãos"):
+                await ml_service.classify("/test.jpg")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_classify_zero_grains_detected(ml_service):
+    """Quando total_grains é 0, deve lançar ValidationError."""
+    ml_service.enable_fallback = False
+
+    response_zero_grains = {
+        "job_id": "test-id",
+        "report": {
+            "total_grains": 0,
+            "defects": {},
+            "llm_summary": "Nenhum grão foi detectado na imagem."
+        },
+        "processed_image_base64": "abc"
+    }
+
+    with patch("builtins.open", mock_open(read_data=b"fake")):
+        with patch.object(ml_service, "_call_api", return_value=response_zero_grains):
+            with pytest.raises(ValidationError, match="Não foi possível detectar grãos"):
+                await ml_service.classify("/test.jpg")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_classify_missing_report_field(ml_service):
+    """Quando report não existe, deve lançar ExternalServiceError."""
+    ml_service.enable_fallback = False
+
+    response_no_report = {
+        "job_id": "test-id",
+        "processed_image_base64": "abc"
+    }
+
+    with patch("builtins.open", mock_open(read_data=b"fake")):
+        with patch.object(ml_service, "_call_api", return_value=response_no_report):
             with pytest.raises(ExternalServiceError, match="Resposta inválida"):
                 await ml_service.classify("/test.jpg")
 
