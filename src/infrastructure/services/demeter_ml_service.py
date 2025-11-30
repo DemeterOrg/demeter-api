@@ -90,7 +90,12 @@ class DemeterMLService:
             )
 
     def _map_response(self, api_response: dict) -> dict:
-        """Mapeia resposta da API para formato interno."""
+        """Mapeia resposta da API para formato interno.
+
+        Suporta dois formatos de resposta:
+        1. Formato antigo (inglês): total_grains, defects{broken, fermented}
+        2. Formato novo (português): total_graos, classificacao{Danificado, Defeituoso}
+        """
         try:
             report = api_response.get("report")
 
@@ -106,8 +111,8 @@ class DemeterMLService:
                     "Tire uma foto mais próxima dos grãos com boa iluminação."
                 )
 
-            # Tratamento defensivo: validar se total_grains existe
-            total_grains = report.get("total_grains")
+            # Suportar ambos os formatos: inglês (total_grains) e português (total_graos)
+            total_grains = report.get("total_grains") or report.get("total_graos")
 
             # Se total_grains não existe ou é None/0, considerar como "nenhum grão detectado"
             if total_grains is None or total_grains == 0:
@@ -116,42 +121,83 @@ class DemeterMLService:
                     "Tire uma foto mais próxima dos grãos com boa iluminação."
                 )
 
-            # Validar defects (tratamento defensivo)
-            defects = report.get("defects", {})
-            if not isinstance(defects, dict):
-                defects = {}
-
-            broken = defects.get("broken", 0)
-            fermented = defects.get("fermented", 0)
-            total_defects = broken + fermented
-
-            defect_percentage = (total_defects / total_grains * 100) if total_grains > 0 else 0
-            confidence = max(0.0, 1.0 - (defect_percentage / 100))
-
             # Validar llm_summary
             llm_summary = report.get("llm_summary", "")
 
-            return {
-                "grain_type": "Soja",
-                "confidence_score": Decimal(str(round(confidence, 4))),
-                "extra_data": {
-                    "mock": False,
-                    "job_id": api_response.get("job_id", ""),
-                    "total_grains": total_grains,
-                    "defects": {
-                        "broken": broken,
-                        "fermented": fermented,
-                        "total": total_defects,
-                        "percentage": round(defect_percentage, 2)
-                    },
-                    "llm_summary": llm_summary,
-                    "processed_image_available": True,
-                    "analysis": {
-                        "grain_count": total_grains,
-                        "quality": self._extract_quality(llm_summary)
+            # Detectar qual formato está sendo usado
+            if "classificacao" in report:
+                # Formato NOVO (português)
+                classificacao = report.get("classificacao", {})
+                if not isinstance(classificacao, dict):
+                    classificacao = {}
+
+                # Calcular defeitos baseado na classificação
+                danificado = classificacao.get("Danificado", 0)
+                defeituoso = classificacao.get("Defeituoso", 0)
+                total_defects = danificado + defeituoso
+
+                defect_percentage = (total_defects / total_grains * 100) if total_grains > 0 else 0
+                confidence = max(0.0, 1.0 - (defect_percentage / 100))
+
+                return {
+                    "grain_type": "Soja",
+                    "confidence_score": Decimal(str(round(confidence, 4))),
+                    "extra_data": {
+                        "mock": False,
+                        "job_id": api_response.get("job_id", ""),
+                        "total_grains": total_grains,
+                        "defects": {
+                            "danificado": danificado,
+                            "defeituoso": defeituoso,
+                            "total": total_defects,
+                            "percentage": round(defect_percentage, 2)
+                        },
+                        "classificacao": classificacao,
+                        "percentuais": report.get("percentuais", {}),
+                        "estatisticas": report.get("estatisticas", {}),
+                        "defeitos_encontrados": report.get("defeitos_encontrados", {}),
+                        "llm_summary": llm_summary,
+                        "processed_image_available": True,
+                        "analysis": {
+                            "grain_count": total_grains,
+                            "quality": self._extract_quality(llm_summary)
+                        }
                     }
                 }
-            }
+            else:
+                # Formato ANTIGO (inglês)
+                defects = report.get("defects", {})
+                if not isinstance(defects, dict):
+                    defects = {}
+
+                broken = defects.get("broken", 0)
+                fermented = defects.get("fermented", 0)
+                total_defects = broken + fermented
+
+                defect_percentage = (total_defects / total_grains * 100) if total_grains > 0 else 0
+                confidence = max(0.0, 1.0 - (defect_percentage / 100))
+
+                return {
+                    "grain_type": "Soja",
+                    "confidence_score": Decimal(str(round(confidence, 4))),
+                    "extra_data": {
+                        "mock": False,
+                        "job_id": api_response.get("job_id", ""),
+                        "total_grains": total_grains,
+                        "defects": {
+                            "broken": broken,
+                            "fermented": fermented,
+                            "total": total_defects,
+                            "percentage": round(defect_percentage, 2)
+                        },
+                        "llm_summary": llm_summary,
+                        "processed_image_available": True,
+                        "analysis": {
+                            "grain_count": total_grains,
+                            "quality": self._extract_quality(llm_summary)
+                        }
+                    }
+                }
 
         except ValidationError:
             # Re-lançar ValidationError para que seja tratado como 400 Bad Request
