@@ -8,12 +8,10 @@ from pydantic import BaseModel, Field
 
 
 class ClassificationResponse(BaseModel):
-    """Response de uma classificação."""
-
     id: int
     user_id: int
     grain_type: str
-    confidence_score: Decimal
+    confidence_score: Decimal = Field(default=Decimal("0.0"))
     image_path: str
     extra_data: dict | None = None
     notes: str | None = None

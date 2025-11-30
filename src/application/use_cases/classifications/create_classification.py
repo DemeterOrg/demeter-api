@@ -1,6 +1,7 @@
 """Use case para criar classificação."""
 
 from fastapi import UploadFile
+from decimal import Decimal
 
 from src.infrastructure.repositories.classification_repository_impl import ClassificationRepositoryImpl
 from src.infrastructure.services.storage_service import StorageService
@@ -45,7 +46,11 @@ class CreateClassificationUseCase:
             user_id=user_id,
             image_path=image_path,
             grain_type=result["grain_type"],
-            confidence_score=float(result["confidence_score"]) if result["confidence_score"] else None,
+            confidence_score=(
+            result["confidence_score"]
+            if result.get("confidence_score") is not None
+            else Decimal("0.0")
+            ),
             extra_data=result["extra_data"]
         )
 
