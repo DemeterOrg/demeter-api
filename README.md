@@ -234,8 +234,8 @@
 
    ### Em Desenvolvimento 🚧
 
-   - [ ] Integração com modelo de ML real
-   - [ ] Upload e processamento de imagens
+   - [x] Integração com modelo de ML real
+   - [x] Upload e processamento de imagens
    - [ ] Métricas e estatísticas
    - [ ] Exportação de dados
    - [ ] API de relatórios
